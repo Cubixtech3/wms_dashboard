@@ -160,7 +160,7 @@ function formatDate(d) {
   });
 }
 
-function HistoryModal({ item, onClose }) {
+function HistoryModal({ item, onClose, dept }) {
   const [opmod, setOpmod] = useState("ALL TRASACTIONS");
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -177,7 +177,7 @@ function HistoryModal({ item, onClose }) {
       guid: API_PARAMS.guid,
       Opmod: opmod,
       Code: trim(item.Code),
-      Deptno: "HO",
+      Deptno: dept,
       Tr_Yr: "mobile",
     });
     fetch(`${HISTORY_API}?${params}`)
@@ -354,7 +354,7 @@ function HistoryModal({ item, onClose }) {
   );
 }
 
-export default function StockList() {
+export default function StockList({ dept }) {
   const [query, setQuery] = useState("");
   const debounced = useDebounce(query);
   const [pill, setPill] = useState("all");
@@ -692,7 +692,7 @@ export default function StockList() {
       )}
 
       {/* History modal */}
-      <HistoryModal item={historyItem} onClose={() => setHistoryItem(null)} />
+      <HistoryModal item={historyItem} onClose={() => setHistoryItem(null)} dept={dept} />
     </div>
   );
 }

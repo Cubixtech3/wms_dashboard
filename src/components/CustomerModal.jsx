@@ -20,10 +20,17 @@ function trim(v) {
   return String(v).trim();
 }
 
-export default function CustomerModal({ data, onClose }) {
+const DEPT_OPTIONS = [
+  { key: "CLZ", label: "CLZ" },
+  { key: "HO", label: "HO" },
+  { key: "POP", label: "POP" },
+];
+
+export default function CustomerModal({ data, onClose, dept }) {
   const { customer } = data;
   const [tab, setTab] = useState(data.tab);
   const [visible, setVisible] = useState(false);
+  const [modalDept, setModalDept] = useState(dept || "HO");
   const [dateFrom, setDateFrom] = useState(defaultFromDate());
   const [dateTo, setDateTo] = useState(todayISO());
   const [statement, setStatement] = useState([]);
@@ -46,7 +53,7 @@ export default function CustomerModal({ data, onClose }) {
     if (tab === "statement") {
       setOutstanding([]);
       setTableSearch("");
-      const url = `${STMT_API}/${CMP}/STMT_ACC1/${customer.code}/-/${dateFrom}/${dateTo}`;
+      const url = `${STMT_API}/${CMP}/STMT_ACC1/${customer.code}/${modalDept}/${dateFrom}/${dateTo}`;
       fetch(url)
         .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
         .then((raw) => {
@@ -76,7 +83,7 @@ export default function CustomerModal({ data, onClose }) {
     } else {
       setStatement([]);
       setTableSearch("");
-      const url = `${OUT_API}/${CMP}/OUT_ACC1/${customer.code}/-/${dateFrom}/${dateTo}/-`;
+      const url = `${OUT_API}/${CMP}/OUT_ACC1/${customer.code}/${modalDept}/${dateFrom}/${dateTo}/-`;
       fetch(url)
         .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
         .then((raw) => {
@@ -99,7 +106,7 @@ export default function CustomerModal({ data, onClose }) {
     }
 
     return () => { cancelled = true; };
-  }, [customer?.code, tab, dateFrom, dateTo]);
+  }, [customer?.code, tab, dateFrom, dateTo, modalDept]);
 
   const handleClose = () => {
     setVisible(false);
@@ -174,8 +181,8 @@ export default function CustomerModal({ data, onClose }) {
           </div>
         </div>
 
-        {/* Date range picker */}
-        <div className="mx-4 mt-4 flex items-center gap-2">
+        {/* Date range picker + Department */}
+        <div className="mx-4 mt-4 flex items-end gap-2">
           <div className="flex-1">
             <label className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-slate-400">From</label>
             <input
@@ -193,6 +200,18 @@ export default function CustomerModal({ data, onClose }) {
               onChange={(e) => setDateTo(e.target.value)}
               className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
             />
+          </div>
+          <div className="w-24">
+            <label className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-slate-400">Dept</label>
+            <select
+              value={modalDept}
+              onChange={(e) => setModalDept(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            >
+              {DEPT_OPTIONS.map((o) => (
+                <option key={o.key} value={o.key}>{o.label}</option>
+              ))}
+            </select>
           </div>
         </div>
 

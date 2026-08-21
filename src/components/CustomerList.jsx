@@ -42,7 +42,7 @@ function mapCustomer(c) {
   };
 }
 
-export default function CustomerList() {
+export default function CustomerList({ dept }) {
   const [query, setQuery] = useState("");
   const debounced = useDebounce(query);
   const [modal, setModal] = useState(null);
@@ -56,15 +56,16 @@ export default function CustomerList() {
     setError(null);
     const q = debounced.trim();
     const url = q
-      ? `${API_BASE}/Cust/${encodeURIComponent(q)}/HO`
-      : `${API_BASE}/Cust50/-/HO`;
+      ? `${API_BASE}/Cust/${encodeURIComponent(q)}/${dept}`
+      : `${API_BASE}/Cust50/-/${dept}`;
     fetch(url)
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then((data) => {
-        if (!cancelled) setCustomers(Array.isArray(data) ? data.map(mapCustomer) : []);
+        if (!cancelled)
+          setCustomers(Array.isArray(data) ? data.map(mapCustomer) : []);
       })
       .catch((err) => {
         if (!cancelled) setError(err.message);
@@ -72,8 +73,10 @@ export default function CustomerList() {
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
-    return () => { cancelled = true; };
-  }, [debounced]);
+    return () => {
+      cancelled = true;
+    };
+  }, [debounced, dept]);
 
   const { page, setPage, totalPages, slice } = usePagination(customers, 8);
 
@@ -88,19 +91,27 @@ export default function CustomerList() {
           <p className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
             <Users className="h-3.5 w-3.5" /> Total Customers
           </p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{totalCustomers}</p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">
+            {totalCustomers}
+          </p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
             <Wallet className="h-3.5 w-3.5" /> Total Outstanding (AR)
           </p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums text-rose-600">{currency(totalOutstanding)}</p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums text-rose-600">
+            {currency(totalOutstanding)}
+          </p>
         </div>
       </div>
 
       {/* Header bar */}
       <div className="mb-4 rounded-xl border border-slate-200 bg-white p-3">
-        <SearchBox value={query} onChange={setQuery} placeholder="Search by name, code, or phone number" />
+        <SearchBox
+          value={query}
+          onChange={setQuery}
+          placeholder="Search by name, code, or phone number"
+        />
       </div>
 
       {/* Loading / Error */}
@@ -145,10 +156,18 @@ export default function CustomerList() {
               <tbody className="divide-y divide-slate-100">
                 {slice.map((c) => (
                   <tr key={c.code} className="hover:bg-slate-50">
-                    <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-slate-700">{c.code}</td>
-                    <td className="px-4 py-3 text-sm text-slate-800">{c.name}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-500">{c.phone}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-500">{c.city}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-slate-700">
+                      {c.code}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-800">
+                      {c.name}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-500">
+                      {c.phone}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-slate-500">
+                      {c.city}
+                    </td>
                     <td
                       className={`whitespace-nowrap px-4 py-3 text-right text-sm font-semibold tabular-nums ${
                         c.balance > 0 ? "text-rose-600" : "text-emerald-600"
@@ -159,13 +178,17 @@ export default function CustomerList() {
                     <td className="whitespace-nowrap px-4 py-3 text-right">
                       <div className="flex justify-end gap-2">
                         <button
-                          onClick={() => setModal({ customer: c, tab: "statement" })}
+                          onClick={() =>
+                            setModal({ customer: c, tab: "statement" })
+                          }
                           className="rounded-md border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
                         >
                           Statement
                         </button>
                         <button
-                          onClick={() => setModal({ customer: c, tab: "outstanding" })}
+                          onClick={() =>
+                            setModal({ customer: c, tab: "outstanding" })
+                          }
                           className="rounded-md bg-indigo-600 px-2.5 py-1.5 text-xs font-medium text-white hover:bg-indigo-700"
                         >
                           Outstanding
@@ -176,7 +199,10 @@ export default function CustomerList() {
                 ))}
                 {slice.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-10 text-center text-sm text-slate-400">
+                    <td
+                      colSpan={6}
+                      className="px-4 py-10 text-center text-sm text-slate-400"
+                    >
                       No customers match your search.
                     </td>
                   </tr>
@@ -184,7 +210,12 @@ export default function CustomerList() {
               </tbody>
             </table>
           </div>
-          <Pagination page={page} totalPages={totalPages} setPage={setPage} count={customers.length} />
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            setPage={setPage}
+            count={customers.length}
+          />
         </div>
       )}
 
@@ -192,7 +223,10 @@ export default function CustomerList() {
       {!loading && !error && (
         <div className="space-y-3 md:hidden">
           {slice.map((c) => (
-            <div key={c.code} className="rounded-xl border border-slate-200 bg-white p-4">
+            <div
+              key={c.code}
+              className="rounded-xl border border-slate-200 bg-white p-4"
+            >
               <div>
                 <p className="text-sm font-semibold text-slate-900">{c.name}</p>
                 <p className="mt-0.5 text-xs text-slate-500">
@@ -201,7 +235,9 @@ export default function CustomerList() {
               </div>
               <div className="mt-3 border-t border-slate-100 pt-3">
                 <p className="text-xs text-slate-400">Current Balance</p>
-                <p className={`text-lg font-semibold tabular-nums ${c.balance > 0 ? "text-rose-600" : "text-emerald-600"}`}>
+                <p
+                  className={`text-lg font-semibold tabular-nums ${c.balance > 0 ? "text-rose-600" : "text-emerald-600"}`}
+                >
                   {currency(c.balance)}
                 </p>
               </div>
@@ -227,12 +263,17 @@ export default function CustomerList() {
             </div>
           )}
           <div className="rounded-xl border border-slate-200 bg-white">
-            <Pagination page={page} totalPages={totalPages} setPage={setPage} count={customers.length} />
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              setPage={setPage}
+              count={customers.length}
+            />
           </div>
         </div>
       )}
 
-      {modal && <CustomerModal data={modal} onClose={() => setModal(null)} />}
+      {modal && <CustomerModal data={modal} onClose={() => setModal(null)} dept={dept} />}
     </div>
   );
 }

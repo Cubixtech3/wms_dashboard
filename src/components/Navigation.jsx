@@ -5,7 +5,7 @@ const NAV_ITEMS = [
   { key: "customers", label: "Customer List", shortLabel: "Customers", icon: Users },
 ];
 
-export function TopHeader({ active, setActive }) {
+export function TopHeader({ active, setActive, dept, setDept, deptOptions }) {
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
@@ -35,8 +35,19 @@ export function TopHeader({ active, setActive }) {
           })}
         </nav>
 
-        <div className="hidden h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 md:flex">
-          MA
+        <div className="flex items-center gap-3">
+          <select
+            value={dept}
+            onChange={(e) => setDept(e.target.value)}
+            className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          >
+            {deptOptions.map((o) => (
+              <option key={o.key} value={o.key}>{o.label}</option>
+            ))}
+          </select>
+          <div className="hidden h-8 w-8 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 md:flex">
+            MA
+          </div>
         </div>
       </div>
     </header>
