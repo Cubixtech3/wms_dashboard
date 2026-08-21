@@ -130,6 +130,155 @@ function trim(v) {
   return String(v).trim();
 }
 
+const LOC_LABELS = { A: "A", B: "B", C: "C", D: "D", E: "E" };
+
+function parseStoreNames(storesName) {
+  const map = {};
+  if (!storesName) return map;
+  String(storesName).split(",").forEach((part) => {
+    const [code, ...nameParts] = part.trim().split("-");
+    if (code && nameParts.length) {
+      map[code.trim()] = nameParts.join("-").trim();
+    }
+  });
+  return map;
+}
+
+function LocationStock({ item, justify }) {
+  const storeMap = parseStoreNames(item["stores_name"]);
+  const locs = ["A", "B", "C", "D", "E"].map((l) => ({
+    label: l,
+    name: storeMap[l] || l,
+    value: Number(item[l]) || 0,
+  }));
+  const hasData = locs.some((l) => l.value > 0);
+  if (!hasData) return null;
+  return (
+    <div className={`flex flex-wrap gap-1.5 ${justify === "end" ? "justify-end" : ""}`}>
+      {locs.map((l) => (
+        <span
+          key={l.label}
+          title={l.name}
+          className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium tabular-nums ${
+            l.value > 0
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-slate-50 text-slate-400"
+          }`}
+        >
+          <span className="font-semibold">{l.label}</span>
+          <span className="opacity-70">{l.name}</span>
+          <span className="font-bold">{l.value}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function StockDetailPanel({ item, onClose }) {
+  if (!item) return null;
+  const storeMap = parseStoreNames(item["stores_name"]);
+  const locs = ["A", "B", "C", "D", "E"].map((l) => ({
+    label: l,
+    name: storeMap[l] || l,
+    value: Number(item[l]) || 0,
+  }));
+  const hasLocData = locs.some((l) => l.value > 0);
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center md:items-center md:p-4"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/40" />
+      <div
+        className="relative w-full max-w-md rounded-t-2xl md:rounded-2xl bg-white shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold text-slate-900 truncate">
+              {trim(item.Description)}
+            </h3>
+            <p className="text-[11px] text-slate-500">{trim(item.Code)}</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="p-4">
+          <div className="mb-3 grid grid-cols-3 gap-3">
+            <div className="rounded-lg bg-slate-50 px-3 py-2">
+              <p className="text-[10px] text-slate-400 uppercase">Total Stock</p>
+              <p className="text-lg font-bold tabular-nums text-slate-900">{item.Stock}</p>
+            </div>
+            <div className="rounded-lg bg-slate-50 px-3 py-2">
+              <p className="text-[10px] text-slate-400 uppercase">Cost</p>
+              <p className="text-lg font-bold tabular-nums text-slate-900">{currency(item.Cost)}</p>
+            </div>
+            <div className="rounded-lg bg-slate-50 px-3 py-2">
+              <p className="text-[10px] text-slate-400 uppercase">Unit</p>
+              <p className="text-lg font-bold text-slate-900">{trim(item.Unit) || "-"}</p>
+            </div>
+          </div>
+
+          {hasLocData && (
+            <div>
+              <p className="mb-2 text-xs font-medium text-slate-500">Location Stock</p>
+              <div className="grid grid-cols-2 gap-2">
+                {locs.map((l) => (
+                  <div
+                    key={l.label}
+                    className={`flex items-center justify-between rounded-lg border px-3 py-2 ${
+                      l.value > 0
+                        ? "border-emerald-200 bg-emerald-50"
+                        : "border-slate-200 bg-slate-50"
+                    }`}
+                  >
+                    <div>
+                      <p className="text-xs font-semibold text-slate-700">
+                        {l.label} - {l.name}
+                      </p>
+                    </div>
+                    <span
+                      className={`text-sm font-bold tabular-nums ${
+                        l.value > 0 ? "text-emerald-700" : "text-slate-400"
+                      }`}
+                    >
+                      {l.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(trim(item.OEM) || trim(item.Modelno) || trim(item.Group)) && (
+            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-slate-100 pt-3">
+              {trim(item.OEM) && (
+                <span className="text-xs text-slate-500">
+                  OEM: <span className="font-medium text-slate-700">{trim(item.OEM)}</span>
+                </span>
+              )}
+              {trim(item.Modelno) && (
+                <span className="text-xs text-slate-500">
+                  Model: <span className="font-medium text-slate-700">{trim(item.Modelno)}</span>
+                </span>
+              )}
+              {trim(item.Group) && (
+                <span className="text-xs text-slate-500">
+                  Group: <span className="font-medium text-slate-700">{trim(item.Group)}</span>
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TypeBadge({ type }) {
   const t = TYPE_MAP[type] || {
     label: type || "N/A",
@@ -363,6 +512,7 @@ export default function StockList({ dept }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [historyItem, setHistoryItem] = useState(null);
+  const [detailItem, setDetailItem] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -552,7 +702,13 @@ export default function StockList({ dept }) {
                       {currency(item.Cost)}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-right text-sm tabular-nums text-slate-700">
-                      {item.Stock}
+                      <button
+                        onClick={() => setDetailItem(item)}
+                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-right font-semibold transition hover:bg-indigo-50 hover:text-indigo-700"
+                      >
+                        {item.Stock}
+                        <Boxes className="h-3 w-3 opacity-40" />
+                      </button>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3">
                       <StatusBadge status={getStockStatus(item)} />
@@ -637,6 +793,14 @@ export default function StockList({ dept }) {
                 </div>
               </div>
 
+              <button
+                onClick={() => setDetailItem(item)}
+                className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-indigo-50 hover:text-indigo-700"
+              >
+                <Boxes className="h-3.5 w-3.5" />
+                Stock Details
+              </button>
+
               {(trim(item.OEM) || trim(item.Modelno) || trim(item.Group)) && (
                 <div className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 border-t border-slate-100 pt-2">
                   {trim(item.OEM) && (
@@ -693,6 +857,8 @@ export default function StockList({ dept }) {
 
       {/* History modal */}
       <HistoryModal item={historyItem} onClose={() => setHistoryItem(null)} dept={dept} />
+      {/* Stock detail panel */}
+      <StockDetailPanel item={detailItem} onClose={() => setDetailItem(null)} />
     </div>
   );
 }
